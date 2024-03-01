@@ -24,44 +24,54 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake) # for third-party
                                                            # library finding
 
 # Compile as C++20, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++20)
+add_compile_options(-std=c++20)
 
 # Find catkin macros and libraries if COMPONENTS list like find_package(catkin
 # REQUIRED COMPONENTS xyz) is used, also find other catkin packages
+
 find_package(catkin REQUIRED COMPONENTS roscpp)
 list(APPEND INCLUDE_LIST ${catkin_INCLUDE_DIRS})
 list(APPEND LIB_LIST ${catkin_LIBRARIES})
 
+# System dependencies are found with CMake's conventions find_package(Boost
+# REQUIRED COMPONENTS system)
+
 # Boost
 find_package(Boost REQUIRED)
+list(APPEND CATKIN_SYSTEM_DEPENDS_LIST Boost)
 list(APPEND INCLUDE_LIST ${Boost_INCLUDE_DIRS})
 list(APPEND LIB_LIST ${Boost_LIBRARIES})
 
 # Gflags
 find_package(Gflags REQUIRED)
-list(APPEND INCLUDE_LIST ${Gflags_INCLUDE_DIRS})
+list(APPEND CATKIN_SYSTEM_DEPENDS_LIST GFLAGS)
+list(APPEND INCLUDE_LIST ${GFLAGS_INCLUDE_DIRS})
 list(APPEND LIB_LIST ${GFLAGS_LIBRARIES})
 
 # Glog
 find_package(Glog REQUIRED)
+list(APPEND CATKIN_SYSTEM_DEPENDS_LIST GLOG)
 list(APPEND INCLUDE_LIST ${GLOG_INCLUDE_DIRS})
 list(APPEND LIB_LIST ${GLOG_LIBRARIES})
 
 # GTest
 find_package(GTest REQUIRED)
+list(APPEND CATKIN_SYSTEM_DEPENDS_LIST GTEST)
 list(APPEND INCLUDE_LIST ${GTEST_INCLUDE_DIRS})
 list(APPEND LIB_LIST GTest::gtest)
 
-# csv-parser
-list(APPEND INCLUDE_LIST third-party/csv-parser/single_include)
+# csv-parser add_subdirectory(third-party/csv-parser) list(APPEND
+# CATKIN_SYSTEM_DEPENDS_LIST CSV) list(APPEND INCLUDE_LIST
+# ${CMAKE_CURRENT_SOURCE_DIR}/third-party/csv-parser/include) list(APPEND
+# LIB_LIST csv)
+list(APPEND INCLUDE_LIST
+     ${CMAKE_CURRENT_SOURCE_DIR}/third-party/csv-parser/single_include)
 
 # yaml-cpp
 add_subdirectory(third-party/yaml-cpp)
-# include_directories(${YAML_CPP_INCLUDE_DIRS})
+list(APPEND CATKIN_SYSTEM_DEPENDS_LIST YAML_CPP)
+list(APPEND INCLUDE_LIST ${YAML_CPP_INCLUDE_DIR})
 list(APPEND LIB_LIST yaml-cpp::yaml-cpp)
-
-# System dependencies are found with CMake's conventions find_package(Boost
-# REQUIRED COMPONENTS system)
 
 # Uncomment this if the package has a setup.py. This macro ensures modules and
 # global scripts declared therein get installed See
@@ -122,10 +132,17 @@ list(APPEND LIB_LIST yaml-cpp::yaml-cpp)
 # that dependent projects also need CATKIN_DEPENDS: catkin_packages dependent
 # projects also need DEPENDS: system dependencies of this project that dependent
 # projects also need
-catkin_package(INCLUDE_DIRS include LIBRARIES ${PROJECT_NAME} CATKIN_DEPENDS
-               roscpp)
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${INCLUDE_LIST})
+catkin_package(
+  INCLUDE_DIRS
+  include
+  ${INCLUDE_LIST}
+  LIBRARIES
+  ${PROJECT_NAME}
+  CATKIN_DEPENDS
+  roscpp
+  DEPENDS
+  ${CATKIN_SYSTEM_DEPENDS_LIST})
 
 # ##############################################################################
 # Build ##
@@ -134,15 +151,17 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${INCLUDE_LIST})
 # Specify additional locations of header files Your package locations should be
 # listed before other locations
 
+include_directories(include ${INCLUDE_LIST})
+
 # Declare a C++ library
 add_library(${PROJECT_NAME} SHARED src/Files.cpp)
-target_link_libraries(${PROJECT_NAME} ${LIB_LIST})
-# list(APPEND LIB_LIST ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${LIB_LIST})
 
 # Add cmake target dependencies of the library as an example, code may need to
 # be generated before libraries either from message generation or dynamic
-# reconfigure add_dependencies(${PROJECT_NAME}
-# ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# reconfigure
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS}
+                 ${catkin_EXPORTED_TARGETS})
 
 # Declare a C++ executable With catkin_make all packages are built within a
 # single CMake context The recommended prefix ensures that target names across
@@ -180,13 +199,15 @@ target_link_libraries(${PROJECT_NAME} ${LIB_LIST})
 
 # Mark libraries for installation See
 # http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-# install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION
-# ${CATKIN_PACKAGE_LIB_DESTINATION} LIBRARY DESTINATION
-# ${CATKIN_PACKAGE_LIB_DESTINATION} RUNTIME DESTINATION
-# ${CATKIN_GLOBAL_BIN_DESTINATION} )
+install(
+  TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
 
-# Mark cpp header files for installation install(DIRECTORY
-# include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 # FILES_MATCHING PATTERN "*.h" PATTERN ".svn" EXCLUDE )
 
 # Mark other files for installation (e.g. launch and bag files, etc.)
