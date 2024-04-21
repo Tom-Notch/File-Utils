@@ -12,6 +12,7 @@ System environment needs to have the following environment:
 - GoogleTest
 - Glog
 - Gflags
+- python3-opencv (for python lib)
 
 ## Usage
 
