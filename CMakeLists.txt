@@ -23,6 +23,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
 
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake) # for third-party
+                                                           # library finding
+
 # Compile as C++20
 add_compile_options(-std=c++20)
 
@@ -30,8 +33,13 @@ add_compile_options(-std=c++20)
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
+
+# ROS 2 package dependencies
 find_package(rclcpp REQUIRED)
+list(APPEND AMENT_DEPENDENCIES rclcpp)
+
 find_package(rclpy REQUIRED)
+list(APPEND AMENT_DEPENDENCIES rclpy)
 
 # Boost
 find_package(Boost REQUIRED)
@@ -68,7 +76,7 @@ add_library(${PROJECT_NAME} SHARED src/Files.cpp)
 target_include_directories(
   ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                          $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(${PROJECT_NAME} rclcpp rclpy)
+ament_target_dependencies(${PROJECT_NAME} ${AMENT_DEPENDENCIES})
 target_link_libraries(${PROJECT_NAME} ${LIB_LIST})
 
 # Visibility macros
@@ -77,6 +85,8 @@ target_compile_definitions(${PROJECT_NAME}
 
 # Installation and exports
 install(DIRECTORY include/ DESTINATION include)
+# Fix csv-parser not visible to dependent packages
+install(DIRECTORY third-party/csv-parser/single_include/ DESTINATION include)
 
 install(
   TARGETS ${PROJECT_NAME} yaml-cpp
@@ -85,7 +95,7 @@ install(
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
 
-ament_export_include_directories(include)
+ament_export_include_directories(include ${INCLUDE_LIST})
 ament_export_libraries(${PROJECT_NAME})
 ament_export_targets(export_${PROJECT_NAME})
 

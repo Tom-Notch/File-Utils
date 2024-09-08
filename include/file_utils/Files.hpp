@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <file_utils/visibility_control.h>
+
 #include <filesystem>
 #include <iostream>
 #include <string>
