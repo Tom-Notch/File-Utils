@@ -41,26 +41,27 @@ import numpy as np
 #     return model
 
 
-def print_dict(d: dict, indent: int = 0) -> None:
-    """print a dictionary with indentation, uses recursion to print nested dictionaries
+def dict_to_string(d: dict, indent: int = 0) -> str:
+    """Return a string representation of a dictionary with indentation,
+    uses recursion to handle nested dictionaries.
 
     Args:
-        d (dict): dictionary to be printed
+        d (dict): dictionary to be represented as a string.
         indent (int, optional): indentation level. Defaults to 0.
 
     Returns:
-        None
+        str: formatted string representation of the dictionary.
     """
+    result = ""
     for key, value in d.items():
         if isinstance(value, dict):
-            print("  " * indent + str(key) + ": ")
-            print_dict(value, indent + 1)
+            result += "  " * indent + str(key) + ":\n"
+            result += dict_to_string(value, indent + 1)
         elif isinstance(value, np.ndarray):
-            print(
-                "  " * indent + str(key) + ":\n" + str(value)
-            )  # new line before printing matrix for better readability
+            result += "  " * indent + str(key) + ":\n" + str(value) + "\n"
         else:
-            print("  " * indent + str(key) + ": " + str(value))
+            result += "  " * indent + str(key) + ": " + str(value) + "\n"
+    return result
 
 
 def parse_path(probe_path: str, base_path: str = None):
